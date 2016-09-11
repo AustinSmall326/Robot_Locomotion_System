@@ -1,0 +1,1 @@
+/**<Placing this to the right of a class member will give information about that member*/

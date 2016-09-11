@@ -1,0 +1,5 @@
+/** @brief		A brief (one-line) description of the class.	
+ *  @details  	A more detailed, possibly multi-line
+ *				description of the class and exactly
+ *				what it does.
+ */

@@ -1,0 +1,23 @@
+Locmotion Developement Doxygen Requirements
+
+In order to ensure that current and future UPennalizers members can
+read and understand the new locmotion code, we are requireing that 
+ALL code be documented using doxygen so that documentation can be
+auto-generated. This will help keep code clear, organize, and understandable.
+
+In order to help facilitate this, you will find doxygen C++ templates included
+in the DoxygenTemplates directory. Each text file contatins the formatted comment blocks that
+you may copy and paste into your code. BUT YOU MUST UPDATE THESE TO REFLECT 
+THE ACTUAL CODE THAT WAS WRITTEN/CHANGED.
+
+If you would like to read through the doxygen documentation you can find that here:
+http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html
+
+All code that requests to be merged into the master git branch MUST be completely
+commented. We will check for adherence to this. Feel free to get more advanced if you
+would like, but at a minimum, we expect ALL files, classes, class members, and funcitons
+to be properly documented.
+
+Please note that you do not have to worry about actually generating the documentation,
+just that all the code you write is properly documented.
+

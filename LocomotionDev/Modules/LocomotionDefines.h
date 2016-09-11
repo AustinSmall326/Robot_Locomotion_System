@@ -1,0 +1,95 @@
+/** @file    LocomotionDefines.h
+ *  @brief   Header file that contains walk parameters.
+ *  @author  Austin Small
+ */
+
+#ifndef LocomotionDefines_h_DEFINED
+#define LocomotionDefines_h_DEFINED
+
+// Joint angles for arms during operation.
+#define GLOBAL_L_ARM_SHOULDER_PITCH     1.50000    // rad
+#define GLOBAL_L_ARM_SHOULDER_ROLL      0.40000
+#define GLOBAL_L_ARM_ELBOW_YAW          0.00000
+#define GLOBAL_L_ARM_ELBOW_ROLL        -0.50000
+#define GLOBAL_L_ARM_WRIST_YAW          0.00000
+
+#define GLOBAL_R_ARM_SHOULDER_PITCH     1.50000
+#define GLOBAL_R_ARM_SHOULDER_ROLL     -0.40000
+#define GLOBAL_R_ARM_ELBOW_YAW          0.00000
+#define GLOBAL_R_ARM_ELBOW_ROLL         0.50000
+#define GLOBAL_R_ARM_WRIST_YAW          0.00000
+
+#define GLOBAL_HEAD_YAW                 0.00000
+#define GLOBAL_HEAD_PITCH               0.00000
+
+// Joint angles and stiffness for NAO in resting pose.
+#define GLOBAL_REST_STIFFNESS               0.30000
+
+#define GLOBAL_REST_L_ARM_SHOULDER_PITCH    1.50000   // rad
+#define GLOBAL_REST_L_ARM_SHOULDER_ROLL     0.40000
+#define GLOBAL_REST_L_ARM_ELBOW_YAW         0.00000
+#define GLOBAL_REST_L_ARM_ELBOW_ROLL       -0.5000
+#define GLOBAL_REST_L_ARM_WRIST_YAW         0.00000
+
+#define GLOBAL_REST_R_ARM_SHOULDER_PITCH    1.50000
+#define GLOBAL_REST_R_ARM_SHOULDER_ROLL    -0.40000
+#define GLOBAL_REST_R_ARM_ELBOW_YAW         0.00000
+#define GLOBAL_REST_R_ARM_ELBOW_ROLL        0.50000
+#define GLOBAL_REST_R_ARM_WRIST_YAW         0.00000
+
+#define GLOBAL_REST_L_LEG_HIP_YAW_PITCH     0.00000
+#define GLOBAL_REST_L_LEG_HIP_ROLL          0.00000
+#define GLOBAL_REST_L_LEG_HIP_PITCH        -0.90000
+#define GLOBAL_REST_L_LEG_KNEE_PITCH        2.11000
+#define GLOBAL_REST_L_LEG_ANKLE_PITCH      -1.20000
+#define GLOBAL_REST_L_LEG_ANKLE_ROLL        0.00000
+
+#define GLOBAL_REST_R_LEG_HIP_ROLL          0.00000
+#define GLOBAL_REST_R_LEG_HIP_PITCH        -0.90000
+#define GLOBAL_REST_R_LEG_KNEE_PITCH        2.11000
+#define GLOBAL_REST_R_LEG_ANKLE_PITCH      -1.20000
+#define GLOBAL_REST_R_LEG_ANKLE_ROLL        0.00000
+
+#define GLOBAL_REST_HEAD_YAW                0.00000
+#define GLOBAL_REST_HEAD_PITCH              0.00000
+
+// Joint angles and stiffness for NAO at midway point of get-up.
+#define GLOBAL_GETUP_MIDWAY_STIFFNESS               0.70000
+
+#define GLOBAL_GETUP_MIDWAY_L_ARM_SHOULDER_PITCH    1.50000   // rad
+#define GLOBAL_GETUP_MIDWAY_L_ARM_SHOULDER_ROLL     0.40000
+#define GLOBAL_GETUP_MIDWAY_L_ARM_ELBOW_YAW         0.00000
+#define GLOBAL_GETUP_MIDWAY_L_ARM_ELBOW_ROLL       -0.5000
+#define GLOBAL_GETUP_MIDWAY_L_ARM_WRIST_YAW         0.00000
+
+#define GLOBAL_GETUP_MIDWAY_R_ARM_SHOULDER_PITCH    1.50000
+#define GLOBAL_GETUP_MIDWAY_R_ARM_SHOULDER_ROLL    -0.40000
+#define GLOBAL_GETUP_MIDWAY_R_ARM_ELBOW_YAW         0.00000
+#define GLOBAL_GETUP_MIDWAY_R_ARM_ELBOW_ROLL        0.50000
+#define GLOBAL_GETUP_MIDWAY_R_ARM_WRIST_YAW         0.00000
+
+#define GLOBAL_GETUP_MIDWAY_L_LEG_HIP_YAW_PITCH     0.00000
+#define GLOBAL_GETUP_MIDWAY_L_LEG_HIP_ROLL          0.00000
+#define GLOBAL_GETUP_MIDWAY_L_LEG_HIP_PITCH        -1.05000
+#define GLOBAL_GETUP_MIDWAY_L_LEG_KNEE_PITCH        2.11000
+#define GLOBAL_GETUP_MIDWAY_L_LEG_ANKLE_PITCH      -1.20000
+#define GLOBAL_GETUP_MIDWAY_L_LEG_ANKLE_ROLL        0.00000
+
+#define GLOBAL_GETUP_MIDWAY_R_LEG_HIP_ROLL          0.00000
+#define GLOBAL_GETUP_MIDWAY_R_LEG_HIP_PITCH        -1.05000
+#define GLOBAL_GETUP_MIDWAY_R_LEG_KNEE_PITCH        2.11000
+#define GLOBAL_GETUP_MIDWAY_R_LEG_ANKLE_PITCH      -1.20000
+#define GLOBAL_GETUP_MIDWAY_R_LEG_ANKLE_ROLL        0.00000
+
+#define GLOBAL_GETUP_MIDWAY_HEAD_YAW                0.00000
+#define GLOBAL_GETUP_MIDWAY_HEAD_PITCH              0.00000
+
+// Stiffness for NAO while in ready stance.
+#define GLOBAL_READY_STIFFNESS                      1.00000
+
+// NAOQI related parameters.
+#define GLOBAL_DCM_TIME_STEP             0.01000    // sec
+#define GLOBAL_DCM_READ_TIME_STEP        0.04000    // sec
+#define GLOBAL_NUM_ACTUATORS             23
+
+#endif

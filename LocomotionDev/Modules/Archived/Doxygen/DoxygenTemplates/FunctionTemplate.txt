@@ -1,0 +1,9 @@
+/** @brief   Description of the function
+ *  @details More detailed description of the function
+ * 
+ *  @param   p1		Description of paramter p1
+ *  @param   param2	Description of parameter param2
+ * 
+ *  @return  Information about what this function returns
+ *  
+ */
