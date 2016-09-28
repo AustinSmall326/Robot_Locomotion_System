@@ -1,3 +1,29 @@
+------------------
+About Code Base:
+------------------
+
+This project encompasses a full robotics platform (Locomotion, Vision, Localization, and Behavior), designed
+and built by the University of Pennsylvania's Robot Soccer Team (UPennalizers).  Using this code base, the team
+regularly competes in robotic soccer tournaments including the annual RoboCup competition (www.robocup.org).
+
+The code contained in this repository represents our team's efforts to re-develop the code base in order to 
+improve modularity, documentation, and the implementation.  Currently, emphasis has been placed on re-developing
+the locomotion system.  To date, the system includes a fully functioning open-loop omni-directional gait.
+
+Future work will include continued improvements to the locomotion system as well as migration / development of 
+the vision, localization, and behavior systems.
+
+--------------------
+Contact Information:
+--------------------
+
+Primary Contributor:	Austin Small
+Email:					austinsmall326@comcast.net
+Website:				www.AustinSmall.com
+
+UPenn Team Email:		upennalizers@gmail.com
+UPenn Team Website:		http://fling.seas.upenn.edu/~robocup/wiki
+
 -------------------------------
 Setup To Run Code Base:
 -------------------------------
