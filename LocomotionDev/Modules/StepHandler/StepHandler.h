@@ -57,8 +57,8 @@ class StepHandler : public AL::ALModule
         void readyStance(void);
         void restStance(void);
     
-        //void addStep(Point::Foot argFoot, Transform& argTransform, Point::StepType argStepType);
-        //void initializeMotion(void);
+        void addStep(Point::Foot argFoot, Transform& argTransform, Point::StepType argStepType);
+        void initializeMotion(void);
     
     private:
         // Fields
@@ -105,9 +105,9 @@ class StepHandler : public AL::ALModule
         // Methods
         void loadLocomotionParameters(void);
     
-        //void loop(void);
+        void loop(void);
         void computeMotion(void);
-        //void executeMotion(void);
+        void executeMotion(void);
         void generateImplicitStep(void);
         void generateImplicitStepTrajectories(Point& implicitStep);
         void generateGenericStepTrajectories(Point& currentStep, Point& nextStep, Point& nextNextStep);
@@ -129,11 +129,11 @@ class StepHandler : public AL::ALModule
         std::string runTests(void);
         std::string runVisualTestsPartOne(void);
         std::string runVisualTestsPartTwo(void);
-        //std::string getParamValue(std::string paramName);
-        //std::string setParamValue(std::string paramName, std::string paramValue);
-        //void startTestMotion(void);
-        //void testMotionGenerator(void);
-        //void stopTestMotion(void);
+        std::string getParamValue(std::string paramName);
+        std::string setParamValue(std::string paramName, std::string paramValue);
+        void startTestMotion(void);
+        void testMotionGenerator(void);
+        void stopTestMotion(void);
 };
 
 enum LocomotionVariables { GLOBAL_STEP_WIDTH_ENUM,

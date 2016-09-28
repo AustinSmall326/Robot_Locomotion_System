@@ -98,13 +98,12 @@ Transform& Transform::translateZ(double z)
 
 /** @brief   Performs clockwise rotation around the x-axis.
  *
- *  @param   a		The clockwise angle of rotation in degrees.
+ *  @param   a		The clockwise angle of rotation in radians.
  *
  *  @return  A reference to the transform object.
  */
-Transform& Transform::rotateX(double a)
+Transform& Transform::rotateX(double aRad)
 {
-    double aRad = a * PI / 180;
     double ca = cos(aRad);
     double sa = sin(aRad);
     
@@ -122,13 +121,12 @@ Transform& Transform::rotateX(double a)
 
 /** @brief   Performs clockwise rotation around the y-axis.
  *
- *  @param   a		The clockwise angle of rotation in degrees.
+ *  @param   a		The clockwise angle of rotation in radians.
  *
  *  @return  A reference to the transform object.
  */
-Transform& Transform::rotateY(double a)
+Transform& Transform::rotateY(double aRad)
 {
-    double aRad = a * PI / 180;
     double ca = cos(aRad);
     double sa = sin(aRad);
     
@@ -146,13 +144,12 @@ Transform& Transform::rotateY(double a)
 
 /** @brief   Performs clockwise rotation around the z-axis.
  *
- *  @param   a		The clockwise angle of rotation in degrees.
+ *  @param   a		The clockwise angle of rotation in radians.
  *
  *  @return  A reference to the transform object.
  */
-Transform& Transform::rotateZ(double a)
+Transform& Transform::rotateZ(double aRad)
 {
-    double aRad = a * PI / 180;
     double ca = cos(aRad);
     double sa = sin(aRad);
     
@@ -263,7 +260,7 @@ Transform transform6D(std::vector<double> p)
 /** @brief   Returns the a vector containing x, y, z, (xRotation, yRotation, zRotation).
  *           Note that in order for this operation to work, the initial rotation must have been
  *           performed in the order XYZ, and translation must be performed after rotation.
- *           Futhermore, there are several limitations.  Theta y must be between -90 and 90 
+ *           Futhermore, there are several limitations.  Theta y must be between -pi/2 and pi/2
  *           degrees.
  *
  *  @param   t1		The transformation matrix to extract the 6D vector from.
@@ -279,9 +276,9 @@ std::vector<double> position6D(Transform t1)
     p[1] = t1(1,3);
     p[2] = t1(2,3);
     
-    p[3] = atan2(t1(2,1), t1(2,2)) * 180 / PI;
-    p[4] = asin(-t1(2,0)) * 180 / PI;
-    p[5] = atan2(t1(1,0), t1(0,0)) * 180 / PI;
+    p[3] = atan2(t1(2,1), t1(2,2));
+    p[4] = asin(-t1(2,0));
+    p[5] = atan2(t1(1,0), t1(0,0));
     
     return p;
 }

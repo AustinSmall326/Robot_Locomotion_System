@@ -164,61 +164,61 @@ std::string TransformTests::runTests(void)
     // Rotate on identity matrix.
     testTransform.clear();
     
-    testTransform.rotateX(30.0);
+    testTransform.rotateX(M_PI/6);
     
     if (fabs(testTransform(0,0) - 1.0) < 0.001 && fabs(testTransform(0,1) - 0.0) < 0.001      && fabs(testTransform(0,2) - 0.0) < 0.001      && fabs(testTransform(0,3) - 0.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.0) < 0.001 && fabs(testTransform(1,1) - 0.866025) < 0.001 && fabs(testTransform(1,2) - (-0.5)) < 0.001   && fabs(testTransform(1,3) - 0.0) < 0.001 &&
         fabs(testTransform(2,0) - 0.0) < 0.001 && fabs(testTransform(2,1) - 0.5) < 0.001      && fabs(testTransform(2,2) - 0.866025) < 0.001 && fabs(testTransform(2,3) - 0.0) < 0.001 &&
         fabs(testTransform(3,0) - 0.0) < 0.001 && fabs(testTransform(3,1) - 0.0) < 0.001      && fabs(testTransform(3,2) - 0.0) < 0.001      && fabs(testTransform(3,3) - 1.0) < 0.001)
     {
-        output.append("rotateX(30.0) test passed!\n");
+        output.append("rotateX(pi/6) test passed!\n");
     }
     else
     {
-        output.append("rotateX(30.0) test FAILED!\n");
+        output.append("rotateX(pi/6) test FAILED!\n");
     }
     
     /** rotateY(double a) **/
     // Rotate on identity matrix.
     testTransform.clear();
     
-    testTransform.rotateY(60.0);
+    testTransform.rotateY(M_PI / 3);
     
     if (fabs(testTransform(0,0) - 0.5) < 0.001         && fabs(testTransform(0,1) - 0.0) < 0.001 && fabs(testTransform(0,2) - 0.866025) < 0.001 && fabs(testTransform(0,3) - 0.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.0) < 0.001         && fabs(testTransform(1,1) - 1.0) < 0.001 && fabs(testTransform(1,2) - 0.0) < 0.001      && fabs(testTransform(1,3) - 0.0) < 0.001 &&
         fabs(testTransform(2,0) - (-0.866025)) < 0.001 && fabs(testTransform(2,1) - 0.0) < 0.001 && fabs(testTransform(2,2) - 0.5) < 0.001      && fabs(testTransform(2,3) - 0.0) < 0.001 &&
         fabs(testTransform(3,0) - 0.0) < 0.001         && fabs(testTransform(3,1) - 0.0) < 0.001 && fabs(testTransform(3,2) - 0.0) < 0.001      && fabs(testTransform(3,3) - 1.0) < 0.001)
     {
-        output.append("rotateY(60.0) test passed!\n");
+        output.append("rotateY(pi / 3) test passed!\n");
     }
     else
     {
-        output.append("rotateY(60.0) test FAILED!\n");
+        output.append("rotateY(pi / 3) test FAILED!\n");
     }
     
     /** rotateZ(double a) **/
     // Rotate on identity matrix.
     testTransform.clear();
     
-    testTransform.rotateZ(45.0);
+    testTransform.rotateZ(M_PI / 4);
     
     if (fabs(testTransform(0,0) - 0.707107) < 0.001 && fabs(testTransform(0,1) - (-0.707107)) < 0.001 && fabs(testTransform(0,2) - 0.0) < 0.001 && fabs(testTransform(0,3) - 0.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.707107) < 0.001 && fabs(testTransform(1,1) - 0.707107) < 0.001    && fabs(testTransform(1,2) - 0.0) < 0.001 && fabs(testTransform(1,3) - 0.0) < 0.001 &&
         fabs(testTransform(2,0) - 0.0) < 0.001      && fabs(testTransform(2,1) - 0.0) < 0.001         && fabs(testTransform(2,2) - 1.0) < 0.001 && fabs(testTransform(2,3) - 0.0) < 0.001 &&
         fabs(testTransform(3,0) - 0.0) < 0.001      && fabs(testTransform(3,1) - 0.0) < 0.001         && fabs(testTransform(3,2) - 0.0) < 0.001 && fabs(testTransform(3,3) - 1.0) < 0.001)
     {
-        output.append("rotateZ(45.0) test passed!\n");
+        output.append("rotateZ(pi / 4) test passed!\n");
     }
     else
     {
-        output.append("rotateZ(45.0) test FAILED!\n");
+        output.append("rotateZ(pi / 4) test FAILED!\n");
     }
     
     /** Compositions of translation and rotation. **/
     // RotateX -> RotateY -> RotateZ
     testTransform.clear();
     
-    testTransform.rotateX(34.0).rotateY(86.0).rotateZ(48.0);
+    testTransform.rotateX(34.0 * (M_PI / 180)).rotateY(86.0 * (M_PI / 180)).rotateZ(48.0 * (M_PI / 180));
     
     if (fabs(testTransform(0,0) - 0.046676) < 0.001    && fabs(testTransform(0,1) - (-0.242833)) < 0.001 && fabs(testTransform(0,2) - 0.968944) < 0.001 && fabs(testTransform(0,3) - 0.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.051839) < 0.001    && fabs(testTransform(1,1) - 0.969283) < 0.001    && fabs(testTransform(1,2) - 0.240421) < 0.001 && fabs(testTransform(1,3) - 0.0) < 0.001 &&
@@ -235,7 +235,7 @@ std::string TransformTests::runTests(void)
     // RotateX -> RotateY -> RotateZ -> TranslateX -> TranslateY -> TranslateZ
     testTransform.clear();
     
-    testTransform.rotateX(34.0).rotateY(86.0).rotateZ(48.0).translateX(34.0).translateY(14.0).translateZ(12.0);
+    testTransform.rotateX(34.0 * (M_PI / 180)).rotateY(86.0 * (M_PI / 180)).rotateZ(48.0 * (M_PI / 180)).translateX(34.0).translateY(14.0).translateZ(12.0);
     
     if (fabs(testTransform(0,0) - 0.046676) < 0.001    && fabs(testTransform(0,1) - (-0.242833)) < 0.001 && fabs(testTransform(0,2) - 0.968944) < 0.001 && fabs(testTransform(0,3) - 34.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.051839) < 0.001    && fabs(testTransform(1,1) - 0.969283) < 0.001    && fabs(testTransform(1,2) - 0.240421) < 0.001 && fabs(testTransform(1,3) - 14.0) < 0.001 &&
@@ -252,7 +252,7 @@ std::string TransformTests::runTests(void)
     // RotateX -> RotateY -> RotateZ -> TranslateX -> TranslateY -> TranslateZ
     testTransform.clear();
     
-    testTransform.rotateX(34.0).rotateY(12.0).rotateZ(14.0).translateX(34.0).translateY(86.0).translateZ(48.0);
+    testTransform.rotateX(34.0 * (M_PI / 180)).rotateY(12.0 * (M_PI / 180)).rotateZ(14.0 * (M_PI / 180)).translateX(34.0).translateY(86.0).translateZ(48.0);
     
     if (fabs(testTransform(0,0) - 0.949092) < 0.001    && fabs(testTransform(0,1) - (-0.087753)) < 0.001 && fabs(testTransform(0,2) - 0.302528) < 0.001    && fabs(testTransform(0,3) - 34.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.236635) < 0.001    && fabs(testTransform(1,1) - 0.832538) < 0.001    && fabs(testTransform(1,2) - (-0.500883)) < 0.001 && fabs(testTransform(1,3) - 86.0) < 0.001 &&
@@ -269,7 +269,7 @@ std::string TransformTests::runTests(void)
     // RotateX -> RotateY -> RotateZ -> TranslateX -> TranslateY -> TranslateZ
     testTransform.clear();
     
-    testTransform.rotateX(12.0).rotateY(14.0).rotateZ(34.0).translateX(34.0).translateY(86.0).translateZ(48.0);
+    testTransform.rotateX(12.0 * (M_PI / 180)).rotateY(14.0 * (M_PI / 180)).rotateZ(34.0 * (M_PI / 180)).translateX(34.0).translateY(86.0).translateZ(48.0);
     
     if (fabs(testTransform(0,0) - 0.804412) < 0.001    && fabs(testTransform(0,1) - (-0.505274)) < 0.001 && fabs(testTransform(0,2) - 0.312442) < 0.001    && fabs(testTransform(0,3) - 34.0) < 0.001 &&
         fabs(testTransform(1,0) - 0.542582) < 0.001    && fabs(testTransform(1,1) - 0.839048) < 0.001    && fabs(testTransform(1,2) - (-0.040042)) < 0.001 && fabs(testTransform(1,3) - 86.0) < 0.001 &&
@@ -354,7 +354,7 @@ std::string TransformTests::runTests(void)
     /** inv (Transform t1) **/
     // rotateX.
     testTransform.clear();
-    testTransform.rotateX(30);
+    testTransform.rotateX(30 * (M_PI / 180));
     
     resultTransform = inv(testTransform);
     
@@ -372,7 +372,7 @@ std::string TransformTests::runTests(void)
     
     // rotateY.
     testTransform.clear();
-    testTransform.rotateY(30);
+    testTransform.rotateY(30 * (M_PI / 180));
     
     resultTransform = inv(testTransform);
     
@@ -390,7 +390,7 @@ std::string TransformTests::runTests(void)
     
     // rotateZ.
     testTransform.clear();
-    testTransform.rotateZ(30);
+    testTransform.rotateZ(30 * (M_PI / 180));
     
     resultTransform = inv(testTransform);
     
@@ -408,7 +408,7 @@ std::string TransformTests::runTests(void)
     
     // Composition of rotations.
     testTransform.clear();
-    testTransform.rotateX(78.0).rotateY(15.0).rotateZ(20.0);
+    testTransform.rotateX(78.0 * (M_PI / 180)).rotateY(15.0 * (M_PI / 180)).rotateZ(20.0 * (M_PI / 180));
     
     resultTransform = inv(testTransform);
     
@@ -498,7 +498,7 @@ std::string TransformTests::runTests(void)
     
     // Composition of rotations and translations.
     testTransform.clear();
-    testTransform.rotateX(78.0).rotateY(15.0).rotateZ(20.0).translateX(34.0).translateY(-65.4).translateZ(1.3);
+    testTransform.rotateX(78.0 * (M_PI / 180)).rotateY(15.0 * (M_PI / 180)).rotateZ(20.0 * (M_PI / 180)).translateX(34.0).translateY(-65.4).translateZ(1.3);
     
     resultTransform = inv(testTransform);
     
@@ -518,11 +518,11 @@ std::string TransformTests::runTests(void)
     // rotateX.
     testTransform.clear();
     
-    testTransform.rotateX(2.0);
+    testTransform.rotateX(2.0 * (M_PI / 180));
     
     std::vector<double> p (position6D(testTransform));
     
-    if (fabs(p[0] - 0.0) < 0.001 && fabs(p[1] - 0.0) < 0.001 && fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - 2.0) < 0.001 &&
+    if (fabs(p[0] - 0.0) < 0.001 && fabs(p[1] - 0.0) < 0.001 && fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - (2.0 * (M_PI / 180))) < 0.001 &&
         fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - 0.0) < 0.001)
     {
         output.append("position6D(Transform t1) rotateX test passed!\n");
@@ -535,13 +535,13 @@ std::string TransformTests::runTests(void)
     // rotateY.
     testTransform.clear();
     
-    testTransform.rotateY(50.0);
+    testTransform.rotateY(50.0 * (M_PI / 180));
     
     p = position6D(testTransform);
     
     if (fabs(p[0] - 0.0) < 0.001  && fabs(p[1] - 0.0) < 0.001 &&
         fabs(p[2] - 0.0) < 0.001  && fabs(p[3] - 0.0) < 0.001 &&
-        fabs(p[4] - 50.0) < 0.001 && fabs(p[5] - 0.0) < 0.001)
+        fabs(p[4] - (50.0 * (M_PI / 180))) < 0.001 && fabs(p[5] - 0.0) < 0.001)
     {
         output.append("position6D(Transform t1) rotateY test passed!\n");
     }
@@ -553,13 +553,13 @@ std::string TransformTests::runTests(void)
     // rotateZ.
     testTransform.clear();
     
-    testTransform.rotateZ(89.0);
+    testTransform.rotateZ(89.0 * (M_PI / 180));
     
     p = position6D(testTransform);
     
     if (fabs(p[0] - 0.0) < 0.001 && fabs(p[1] - 0.0) < 0.001 &&
         fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - 0.0) < 0.001 &&
-        fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - 89.0) < 0.001)
+        fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - (89.0 * (M_PI / 180))) < 0.001)
     {
         output.append("position6D(Transform t1) rotateZ test passed!\n");
     }
@@ -571,13 +571,13 @@ std::string TransformTests::runTests(void)
     // Composition of rotations.
     testTransform.clear();
     
-    testTransform.rotateX(0.5).rotateY(0.0).rotateZ(89.0);
+    testTransform.rotateX(0.5 * (M_PI / 180)).rotateY(0.0 * (M_PI / 180)).rotateZ(89.0 * (M_PI / 180));
     
     p = position6D(testTransform);
     
     if (fabs(p[0] - 0.0) < 0.001 && fabs(p[1] - 0.0) < 0.001 &&
-        fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - 0.5) < 0.001 &&
-        fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - 89.0) < 0.001)
+        fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - (0.5 * (M_PI / 180))) < 0.001 &&
+        fabs(p[4] - (0.0 * (M_PI / 180))) < 0.001 && fabs(p[5] - (89.0 * (M_PI / 180))) < 0.001)
     {
         output.append("position6D(Transform t1) composition of rotations test passed!\n");
     }
@@ -661,13 +661,13 @@ std::string TransformTests::runTests(void)
     // Composition of rotations and translations.
     testTransform.clear();
     
-    testTransform.rotateX(0.0).rotateY(0.0).rotateZ(10.0).translateX(-14.0).translateY(3.0).translateZ(8.0);
+    testTransform.rotateX(0.0 * (M_PI / 180)).rotateY(0.0 * (M_PI / 180)).rotateZ(10.0 * (M_PI / 180)).translateX(-14.0).translateY(3.0).translateZ(8.0);
     
     p = position6D(testTransform);
     
     if (fabs(p[0] - (-14.0)) < 0.001 && fabs(p[1] - 3.0) < 0.001 &&
-        fabs(p[2] - 8.0) < 0.001     && fabs(p[3] - 0.0) < 0.001 &&
-        fabs(p[4] - 0.0) < 0.001     && fabs(p[5] - 10.0) < 0.001)
+        fabs(p[2] - 8.0) < 0.001     && fabs(p[3] - (0.0 * (M_PI / 180))) < 0.001 &&
+        fabs(p[4] - (0.0 * (M_PI / 180))) < 0.001     && fabs(p[5] - (10.0 * (M_PI / 180))) < 0.001)
     {
         output.append("position6D(Transform t1) composition of rotations and translations test passed!\n");
     }
@@ -684,7 +684,7 @@ std::string TransformTests::runTests(void)
     testVector[0] = 0.0;
     testVector[1] = 0.0;
     testVector[2] = 0.0;
-    testVector[3] = 34.0;
+    testVector[3] = 34.0 * (M_PI / 180);
     testVector[4] = 0.0;
     testVector[5] = 0.0;
     
@@ -693,7 +693,7 @@ std::string TransformTests::runTests(void)
     p = position6D(testTransform);
     
     if (fabs(p[0] - 0.0) < 0.001 && fabs(p[1] - 0.0) < 0.001 &&
-        fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - 34.0) < 0.001 &&
+        fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - (34.0 * (M_PI / 180))) < 0.001 &&
         fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - 0.0) < 0.001)
     {
         output.append("transform6D(std::vector<double> p) rotateX test passed!\n");
@@ -710,7 +710,7 @@ std::string TransformTests::runTests(void)
     testVector[1] = 0.0;
     testVector[2] = 0.0;
     testVector[3] = 0.0;
-    testVector[4] = 25.0;
+    testVector[4] = 25.0 * (M_PI / 180);
     testVector[5] = 0.0;
     
     testTransform = transform6D(testVector);
@@ -719,7 +719,7 @@ std::string TransformTests::runTests(void)
     
     if (fabs(p[0] - 0.0) < 0.001  && fabs(p[1] - 0.0) < 0.001 &&
         fabs(p[2] - 0.0) < 0.001  && fabs(p[3] - 0.0) < 0.001 &&
-        fabs(p[4] - 25.0) < 0.001 && fabs(p[5] - 0.0) < 0.001)
+        fabs(p[4] - (25.0 * (M_PI / 180))) < 0.001 && fabs(p[5] - 0.0) < 0.001)
     {
         output.append("transform6D(std::vector<double> p) rotateY test passed!\n");
     }
@@ -736,7 +736,7 @@ std::string TransformTests::runTests(void)
     testVector[2] = 0.0;
     testVector[3] = 0.0;
     testVector[4] = 0.0;
-    testVector[5] = 4.0;
+    testVector[5] = 4.0 * (M_PI / 180);
     
     testTransform = transform6D(testVector);
     
@@ -744,7 +744,7 @@ std::string TransformTests::runTests(void)
     
     if (fabs(p[0] - 0.0) < 0.001 && fabs(p[1] - 0.0) < 0.001 &&
         fabs(p[2] - 0.0) < 0.001 && fabs(p[3] - 0.0) < 0.001 &&
-        fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - 4.0) < 0.001)
+        fabs(p[4] - 0.0) < 0.001 && fabs(p[5] - (4.0 * (M_PI / 180))) < 0.001)
     {
         output.append("transform6D(std::vector<double> p) rotateZ test passed!\n");
     }
@@ -759,17 +759,17 @@ std::string TransformTests::runTests(void)
     testVector[0] = 0.0;
     testVector[1] = 0.0;
     testVector[2] = 0.0;
-    testVector[3] = 13.0;
-    testVector[4] = 25.0;
-    testVector[5] = 90.0;
+    testVector[3] = 13.0 * (M_PI / 180);
+    testVector[4] = 25.0 * (M_PI / 180);
+    testVector[5] = 90.0 * (M_PI / 180);
     
     testTransform = transform6D(testVector);
     
     p = position6D(testTransform);
     
     if (fabs(p[0] - 0.0) < 0.001  && fabs(p[1] - 0.0) < 0.001  &&
-        fabs(p[2] - 0.0) < 0.001  && fabs(p[3] - 13.0) < 0.001 &&
-        fabs(p[4] - 25.0) < 0.001 && fabs(p[5] - 90.0) < 0.001)
+        fabs(p[2] - 0.0) < 0.001  && fabs(p[3] - (13.0 * (M_PI / 180))) < 0.001 &&
+        fabs(p[4] - (25.0 * (M_PI / 180))) < 0.001 && fabs(p[5] - (90.0 * (M_PI / 180))) < 0.001)
     {
         output.append("transform6D(std::vector<double> p) composition of rotations test passed!\n");
     }
@@ -884,9 +884,9 @@ std::string TransformTests::runTests(void)
     testVector[0] = 1900.0;
     testVector[1] = 30.0;
     testVector[2] = 50.0;
-    testVector[3] = 33.0;
-    testVector[4] = 0.0;
-    testVector[5] = 90.0;
+    testVector[3] = 33.0 * (M_PI / 180);
+    testVector[4] = 0.0 * (M_PI / 180);
+    testVector[5] = 90.0 * (M_PI / 180);
     
     testTransform = transform6D(testVector);
     
@@ -900,8 +900,8 @@ std::string TransformTests::runTests(void)
      std::cout << p[5];*/
     
     if (fabs(p[0] - 1900.0) < 0.001 && fabs(p[1] - 30.0) < 0.001 &&
-        fabs(p[2] - 50.0) < 0.001   && fabs(p[3] - 33.0) < 0.001 &&
-        fabs(p[4] - 0.0) < 0.001    && fabs(p[5] - 90.0) < 0.001)
+        fabs(p[2] - 50.0) < 0.001   && fabs(p[3] - (33.0 * (M_PI / 180))) < 0.001 &&
+        fabs(p[4] - (0.0 * (M_PI / 180))) < 0.001    && fabs(p[5] - (90.0 * (M_PI / 180))) < 0.001)
     {
         output.append("transform6D(std::vector<double> p) composition of rotations and translations test passed!\n");
     }
@@ -937,9 +937,9 @@ std::string TransformTests::runTests(void)
     testVector2[0] = 3;
     testVector2[1] = 10;
     testVector2[2] = -2;
-    testVector2[3] = 80;
-    testVector2[4] = 5;
-    testVector2[5] = 4;
+    testVector2[3] = 80 * (M_PI / 180);
+    testVector2[4] = 5 * (M_PI / 180);
+    testVector2[5] = 4 * (M_PI / 180);
     
     testTransform = transform6D(testVector2);
     

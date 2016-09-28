@@ -6,13 +6,13 @@ $GLOBAL_COM_OFFSET_X$$   			$$$0.000$$$$     // m
 $GLOBAL_COM_OFFSET_Y$$   			$$$0.000$$$$     // m
 $GLOBAL_G$$            			$$$9.810$$$$     // m / s^2
 $GLOBAL_Y0POS$$        			$$$0.000$$$$     // m
-$GLOBAL_Y0VEL$$        			$$$0.135$$$$     // m/s
+$GLOBAL_Y0VEL$$        			$$$0.125$$$$     // m/s
 $GLOBAL_X0POS$$        			$$$0.038$$$$     // m
 $GLOBAL_X0VEL$$        			$$$0.000$$$$     // m/s
 $GLOBAL_FIRST_SWING_LIFT_START_PHASE$$ 	$$$0.400$$$$
-$GLOBAL_FIRST_SWING_LIFT_END_PHASE$$    $$$1.000$$$$
+$GLOBAL_FIRST_SWING_LIFT_END_PHASE$$         $$$1.000$$$$
 $GLOBAL_SWING_LIFT_START_PHASE$$      	$$$0.050$$$$     
 $GLOBAL_SWING_LIFT_END_PHASE$$        	$$$0.950$$$$     
 $GLOBAL_STEP_FREQUENCY$$              	$$$1.055$$$$   
-$GLOBAL_RWEIGHT$$                     	$$$0.100$$$$
+$GLOBAL_RWEIGHT$$                     	$$$0.000$$$$
 
