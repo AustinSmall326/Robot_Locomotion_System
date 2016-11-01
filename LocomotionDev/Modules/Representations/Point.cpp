@@ -13,6 +13,7 @@ Point::Point(Foot argFoot, StepType argStepType)
     foot = argFoot;
     stepType = argStepType;
     extraTime = 0.0;
+    shouldUpdateSwingTrajectory = false;
 }
 
 /** @brief   Sets the footPos to a designated Transform.
@@ -54,6 +55,29 @@ void Point::addTrajectory(Trajectory argTrajectory)
 Trajectory Point::getTrajectory(int index)
 {
     return trajectoryVector[index];
+}
+
+/** @brief   Returns a Trajectory containing a time stamp, as well as the relevant
+ *           COM Transform and swing foot Transform.
+ *
+ *  @return  Returns a Trajectory as described above.
+ */
+
+Trajectory Point::getTrajectoryFromEnd(int indexFromEnd)
+{
+    return trajectoryVector[trajectoryVector.size() - 1 - indexFromEnd];
+}
+
+/** @brief   Replaces a trajectory, specified by index from the end of the buffer, with a new
+ *           trajectory.
+ *
+ *  @param   indexFromEnd   Index of trajectory to replace (relative to end of buffer).
+ *  @param   newTrajectory  New trajectory to take place of old one.
+ */
+
+void Point::replaceTrajectoryFromEnd(int indexFromEnd, Trajectory newTrajectory)
+{
+    trajectoryVector[trajectoryVector.size() - 1 - indexFromEnd] = newTrajectory;
 }
 
 /** @brief   Returns the number of trajectories stored in the trajectory vector.
@@ -125,4 +149,24 @@ void Point::setExtraTime(double argTime)
 double Point::getExtraTime(void)
 {
     return extraTime;
+}
+
+/** @brief   Set state of shouldUpdateSwingTrajectory.  If true, swing trajectory will be recomputed.
+ *
+ *  @param   True if swing foot trajectory should be recomputed.  False otherwise.
+ */
+
+void Point::setShouldUpdateSwingTrajectory(bool argUpdate)
+{
+    shouldUpdateSwingTrajectory = argUpdate;
+}
+
+/** @brief   Get state of shouldUpdateSwingTrajectory.  If true, swing trajectory will be recomputed.
+ *
+ *  @return  True if swing foot trajectory should be recomputed.  False otherwise.
+ */
+
+bool Point::getShouldUpdateSwingTrajectory(void)
+{
+    return shouldUpdateSwingTrajectory;
 }

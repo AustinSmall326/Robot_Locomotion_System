@@ -111,6 +111,10 @@ std::string StepHandler::communicate(std::string inMessage)
         {
             return runVisualTestsPartTwo();
         }
+        else if (message.compare("StepHandlerVisualTestsPartThree") == 0)
+        {
+            return runVisualTestsPartThree();
+        }
     }
     else if (command.compare("GETPARAMVALUE") == 0)
     {
@@ -373,7 +377,7 @@ void StepHandler::loop(void)
                 stepParameters.setX0Vel(GLOBAL_X0VEL);
                 stepParameters.setY0Pos(GLOBAL_Y0POS);
                 stepParameters.setY0Vel(GLOBAL_Y0VEL);
-                stepParameters.setR(GLOBAL_RWEIGHT);
+                stepParameters.setR(0.0);
                 
                 firstStep.setTrajectoryParameters(stepParameters);
                 
@@ -519,18 +523,6 @@ void StepHandler::computeMotion(void)
     // the global parameters.  Also check if nextStep is specified as the final step.
     if (nextStep.getStepType() == Point::begin)
     {
-        /*
-        COMContainer stepParameters;
-        
-        stepParameters.setX0Pos(-1 * GLOBAL_X0POS);
-        stepParameters.setX0Vel(GLOBAL_X0VEL);
-        stepParameters.setY0Pos(GLOBAL_Y0POS);
-        stepParameters.setY0Vel(GLOBAL_Y0VEL);
-        stepParameters.setR(0.0);
-        
-        nextStep.setTrajectoryParameters(stepParameters);
-        */
-        
         // Compute TEnd for the next step, and TStart for the nextNextStep.
         computeTransitionTime(nextStep, nextNextStep);
     }
@@ -563,6 +555,30 @@ void StepHandler::computeMotion(void)
         // y0Pos, y0Vel, and r still need to be set.
         optimizePendulumParameters(currentStep, nextStep);
     }
+    
+    // A little experiment to increase stability.
+    // Set r to zero, and incorporate into position of next footstep.
+    COMContainer stepParameters = nextStep.getTrajectoryParameters();
+    double rNext = stepParameters.getR();
+    
+    std::cout << rNext << std::endl;
+    
+    stepParameters.setR(0.0);
+    nextStep.setTrajectoryParameters(stepParameters);
+
+    Transform footPosTransform = nextStep.getFootPos();
+    std::vector<double> footPosVector = position6D(footPosTransform);
+    
+    // Determine r components in current step frame.
+    double thetaR = footPosVector[5];
+    double rX = -1 * sin(-1 * thetaR) * rNext;
+    double rY = cos(-1 * thetaR) * rNext;
+
+    footPosVector[0] = footPosVector[0] + rX;
+    footPosVector[1] = footPosVector[1] + rY;
+    nextStep.setFootPos(transform6D(footPosVector));
+
+    currentStep.setShouldUpdateSwingTrajectory(true);
     
     // Generate COM and swing foot trajectory.
     generateGenericStepTrajectories(currentStep, nextStep, nextNextStep);
@@ -1013,47 +1029,105 @@ void StepHandler::optimizePendulumParameters(Point& currentStep, Point& nextStep
     std::vector<double> nextFootPos    = position6D(nextFootTransform);
     double thetaRNext                  = nextFootPos[5];
     
-    double s          = nextFootPos[1]; // y displacement between current and next footstep.
+    // y displacement between current and next footstep.
     double sNextFrame = nextFootPos[0] * sin(thetaRNext) + nextFootPos[1] * cos(thetaRNext);
     
     double rNextFrame = r * cos(thetaRNext);
     
     // Variables to solve for.
-    double y0PosBar = -0.2;
+    double rBarMin = -0.03;
+    double rBarMax = 0.03;
+    
+    double y0PosBar;
     double y0VelBar;
     double rBar;
     
-    // Newton parameters.
+    // Minimization parameters.
     double f;                               // Newton root function (f = y0PosWeight * y0PosBar - rWeight * rBar).
-    double fPrime;                          // First derivative of Newton root function.
-    double rBarPrime;
-    double oldY0PosBar;
+    
+    // Should be varying rbar
+    for (double rBarTemp = rBarMin; rBarTemp <= rBarMax; rBarTemp += 0.001)
+    {
+        // Compute f.
+        // Solve for y0VelBar via velocity matching along y axis of next footstep.
+        double y0VelBarTemp = ( x0Pos * k * sinh(k * endTime) * sin(thetaRNext) +
+                               (y0Pos * k * sinh(k * endTime) + y0Vel * cosh(k * endTime)) * cos(thetaRNext) -
+                                y0PosBar * k * sinh(k * beginTimeBar)) /
+                              cosh(k * beginTimeBar);
+        
+        // Solve for y0PosBar via position matching in y direction.
+        double y0PosBarTemp = (rNextFrame - sNextFrame - rBarTemp - (y0VelBarTemp / k) * sinh(k * beginTimeBar) +
+                               sin(thetaRNext) * (x0Pos * cosh(k * endTime)) + cos(thetaRNext) * (y0Pos * cosh(k * endTime) + (y0Vel / k) * sinh(k * endTime))) /
+                              cosh(k * beginTimeBar);
+        
+        double fTemp        = y0PosWeight * fabs(y0PosBarTemp) + rWeight * fabs(rBarTemp);
+        
+        if (rBarTemp == rBarMin || fTemp < f)
+        {
+            f = fTemp;
+            
+            y0PosBar = y0PosBarTemp;
+            y0VelBar = y0VelBarTemp;
+            rBar     = rBarTemp;
+        }
+    }
+    
+    
+    
     
     // Minimize y0Pos and r according to y0PosWeight and rWeight through implementation of Newton's method.
     // x1 = x0 - f(x0) / f'(x0)
+
+    
+    
+    /*
     do
     {
         // Compute f.
         // Solve for y0VelBar via velocity matching along y axis of next footstep.
         y0VelBar = ( x0Pos * k * sinh(k * endTime) * sin(thetaRNext) +
                     (y0Pos * k * sinh(k * endTime) + y0Vel * cosh(k * endTime)) * cos(thetaRNext) -
-                     y0PosBar * k * sinh(k * beginTimeBar)) /
+                    y0PosBar * k * sinh(k * beginTimeBar)) /
                    cosh(k * beginTimeBar);
         rBar     = x0Pos * cosh(k * endTime) * sin(thetaRNext) + (y0Pos * cosh(k * endTime) + (y0Vel / k) * sinh(k * endTime)) * cos(thetaRNext) -
                    y0PosBar * cosh(k * beginTimeBar) - (y0VelBar / k) * sinh(k * beginTimeBar) - sNextFrame + rNextFrame;
-        f        = y0PosWeight * y0PosBar + rWeight * rBar; // should be absolute value but I don't feel like fixing this right now...
+
+        
+        
+        
+        
+        
+        
+       // rBar = -1 * (y0PosBar * cosh(k * beginTimeBar) + (y0VelBar / k) * sinh(k * beginTimeBar)) + sin(thetaRNext) * (x0Pos * cosh(k * endTime)) + cos(thetaRNext) * (y0Pos * cosh(k * endTime) + (y0VelBar / k) * sinh(k * endTime)) + r - s;
+        f        = y0PosWeight * pow(y0PosBar, 2) + rWeight * pow(rBar, 2);
+        //f        = y0PosWeight * y0PosBar + rWeight * rBar;
+
         
         // Compute fPrime (with respect to y0PosBar).
-        rBarPrime = -1 * cosh(k * beginTimeBar) + pow(sinh(k * beginTimeBar), 2) / cosh(k * beginTimeBar);
-        fPrime = y0PosWeight + rWeight * rBarPrime;
+        
+        
+        //rBarPrime = -1 * cosh(k * beginTimeBar) + pow(sinh(k * beginTimeBar), 2) / cosh(k * beginTimeBar);
+        rBarPrime = -1 * cosh(k * beginTimeBar) - (sinh(k * beginTimeBar) / k) * (-1 * cos(thetaRNext) * k * sinh(k * beginTimeBar)) / (cosh(k * beginTimeBar));
+
+        
+        
+        
+        fPrime = 2 * y0PosWeight * y0PosBar + 2 * rWeight * rBar * rBarPrime;
+        //fPrime = y0PosWeight + rWeight * rBarPrime;
 
         // Update y0Pos value.
         oldY0PosBar = y0PosBar;
         y0PosBar = y0PosBar - f / fPrime;
+        
+        std::cout << fabs(y0PosBar - oldY0PosBar) << std::endl;
     } while(fabs(y0PosBar - oldY0PosBar) > 0.001);
+    */
+     
     
     // Perform last minute updates to beginTimeBar in order to improve position/velocity matching due to
     // approximations in implementing omnidirectional gait.
+    
+    /*
     
     // First iteratively adjust beginTimeBar such that there is no overlap.
     double xPosTEndCurrentFrame = x0Pos * cosh(k * endTime);
@@ -1108,7 +1182,7 @@ void StepHandler::optimizePendulumParameters(Point& currentStep, Point& nextStep
     
     
     
-    
+    */
     
     
     
@@ -1136,7 +1210,7 @@ void StepHandler::optimizePendulumParameters(Point& currentStep, Point& nextStep
     
     // Update LIPM parameters for next step.
     nextStepParameters.setTStart(beginTimeBar);
-    nextStepParameters.setY0Pos(oldY0PosBar);
+    nextStepParameters.setY0Pos(y0PosBar);
     nextStepParameters.setY0Vel(y0VelBar);
     nextStepParameters.setR(rBar);
     
@@ -1145,6 +1219,56 @@ void StepHandler::optimizePendulumParameters(Point& currentStep, Point& nextStep
     return;
 }
 
+/** @brief   Update trajectory of current swing foot.
+ */
+
+void StepHandler::updateSwingTrajectory(void)
+{
+    // Check if trajectories need to be recomputed.
+    // As of now, this would only happen if the foot position was altered, in which case
+    // the trajectory for the swing foot needs to be partially updated.
+    if (currentStepBuffer.front().getShouldUpdateSwingTrajectory())
+    {
+        // First store trajectories for first and foot position.
+        Trajectory startTrajectory  = currentStepBuffer.front().getTrajectoryFromEnd(9);
+        Trajectory finishTrajectory = currentStepBuffer.front().getTrajectoryFromEnd(0);
+        
+        Transform startSwingTransform  = startTrajectory.getSwingFootTransform();
+        Transform finishSwingTransform = finishTrajectory.getSwingFootTransform();
+        
+        std::vector<double> startPosition  = position6D(startSwingTransform);
+        std::vector<double> finishPosition = position6D(finishSwingTransform);
+        
+        double xSlope    = (finishPosition[0] - startPosition[0]) / 9;
+        double ySlope    = (finishPosition[1] - startPosition[1]) / 9;
+        double zSlope    = (finishPosition[2] - startPosition[2]) / 9;
+        double rotXSlope = (finishPosition[3] - startPosition[3]) / 9;
+        double rotYSlope = (finishPosition[4] - startPosition[4]) / 9;
+        double rotZSlope = (finishPosition[5] - startPosition[5]) / 9;
+        
+        // Recompute last ten trajectory points for swing foot.
+        for (int j = 0; j < 10; j++)
+        {
+            std::vector<double> newSwingPosVect(6);
+            
+            newSwingPosVect[0] = startPosition[0] + j * xSlope;
+            newSwingPosVect[1] = startPosition[1] + j * ySlope;
+            newSwingPosVect[2] = startPosition[2] + j * zSlope;
+            newSwingPosVect[3] = startPosition[3] + j * rotXSlope;
+            newSwingPosVect[4] = startPosition[4] + j * rotYSlope;
+            newSwingPosVect[5] = startPosition[5] + j * rotZSlope;
+            
+            Transform newSwingPosTransform = transform6D(newSwingPosVect);
+            
+            Trajectory currentTrajectory = currentStepBuffer.front().getTrajectoryFromEnd(9 - j);
+            currentTrajectory.setSwingFootTransform(newSwingPosTransform);
+            currentStepBuffer.front().replaceTrajectoryFromEnd(9 - j, currentTrajectory);
+        }
+    }
+    
+    currentStepBuffer.front().setShouldUpdateSwingTrajectory(false);
+}
+    
 /** @brief   Computes the ending and beginning times for the current and next pendulum phases respectively,
  *           at the point of their intersection.
  */
@@ -1426,6 +1550,12 @@ std::vector<double> StepHandler::computeSwingCoefficients(double p1, double p2, 
     
     return coefficients;
 }
+
+
+
+
+
+
 
                             /******************************************/
                             /************** Unit Testing **************/
@@ -4936,7 +5066,7 @@ std::string StepHandler::runVisualTestsPartOne(void)
         output.append(boost::lexical_cast<std::string>(pos[2]));
         output.append("_");
     }
-
+    
     // Post testing output manipulation.
     std::string tempOutput(boost::lexical_cast<std::string>(numTests));
     tempOutput.append("_");
@@ -6310,20 +6440,21 @@ std::string StepHandler::runVisualTestsPartTwo(void)
         output.append("_");
     }
     
-    /** computeMotion **/
+    /** 6 footsteps (5 deg rotation / footstep) **/
+    /*
+    // Rotation of 5 degrees per footstep, but no translation.
     numTests++;
-     
+    
     stepsBuffer.clear();
     currentStepBuffer.clear();
-     
-    std::vector<Point> oldSteps;
-     
+    
     generateImplicitStep();
     
     // Create first real step.
     firstStep = Point(Point::right, Point::begin);
     
     firstStepPos.clear();
+    firstStepPos.rotateZ(5.0 * M_PI / 180);
     firstStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     firstStep.setFootPos(firstStepPos);
     
@@ -6340,190 +6471,356 @@ std::string StepHandler::runVisualTestsPartTwo(void)
     
     // Create second real step.
     secondStep = Point(Point::left, Point::moving);
+    
     secondStepPos.clear();
+    secondStepPos.rotateZ(5.0 * M_PI / 180);
     secondStepPos.translate(-1 * GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     secondStep.setFootPos(secondStepPos);
+    
+    secondStepParams.setX0Pos(GLOBAL_X0POS);
+    secondStepParams.setX0Vel(GLOBAL_X0VEL);
+    secondStepParams.setRWeight(0.0);
+    
+    secondStep.setTrajectoryParameters(secondStepParams);
     stepsBuffer.push_back(secondStep);
     
     // Create third real step.
     thirdStep = Point(Point::right, Point::moving);
+    
     thirdStepPos.clear();
+    thirdStepPos.rotateZ(5.0 * M_PI / 180);
     thirdStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     thirdStep.setFootPos(thirdStepPos);
+    
+    COMContainer thirdStepParams(thirdStep.getTrajectoryParameters());
+    
+    thirdStepParams.setX0Pos(-1 * GLOBAL_X0POS);
+    thirdStepParams.setX0Vel(GLOBAL_X0VEL);
+    thirdStepParams.setRWeight(0.0);
+    
+    thirdStep.setTrajectoryParameters(thirdStepParams);
     stepsBuffer.push_back(thirdStep);
     
     // Create fourth real step.
-    fourthStep = Point(Point::left, Point::moving);
-    fourthStepPos.clear();
+    Point fourthStep(Point::left, Point::moving);
+    
+    Transform fourthStepPos;
+    fourthStepPos.rotateZ(5.0 * M_PI / 180);
     fourthStepPos.translate(-1 * GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     fourthStep.setFootPos(fourthStepPos);
+    
     stepsBuffer.push_back(fourthStep);
     
-    // Trajectories for implicit and first step.
+    // Create fifth real step.
+    Point fifthStep(Point::right, Point::moving);
+    
+    Transform fifthStepPos;
+    fifthStepPos.rotateZ(5.0 * M_PI / 180);
+    fifthStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
+    fifthStep.setFootPos(fifthStepPos);
+    
+    stepsBuffer.push_back(fifthStep);
+    
+    // Create sixth real step.
+    Point sixthStep(Point::left, Point::moving);
+    
+    Transform sixthStepPos;
+    sixthStepPos.rotateZ(5.0 * M_PI / 180);
+    sixthStepPos.translate(-1 * GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
+    fifthStep.setFootPos(sixthStepPos);
+    
+    stepsBuffer.push_back(sixthStep);
+    
+    // Create seventh real step.
+    Point seventhStep(Point::right, Point::moving);
+    
+    Transform seventhStepPos;
+    seventhStepPos.rotateZ(5.0 * M_PI / 180);
+    seventhStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
+    seventhStep.setFootPos(seventhStepPos);
+    
+    stepsBuffer.push_back(seventhStep);
+    
+    computeTransitionTime(stepsBuffer[0], stepsBuffer[1]);
+    computeTransitionTime(stepsBuffer[1], stepsBuffer[2]);
+    computeTransitionTime(stepsBuffer[2], stepsBuffer[3]);
+    computeTransitionTime(stepsBuffer[3], stepsBuffer[4]);
+    computeTransitionTime(stepsBuffer[4], stepsBuffer[5]);
+    computeTransitionTime(stepsBuffer[5], stepsBuffer[6]);
+
     generateImplicitStepTrajectories(currentStepBuffer.front());
-    computeMotion();
-     
-    oldSteps.push_back(currentStepBuffer.front());
-    currentStepBuffer.clear();
-    currentStepBuffer.push_back(stepsBuffer[0]);
-    stepsBuffer.erase(stepsBuffer.begin());
-     
-    // Trajectories for second step.
-    computeMotion();
-     
-    oldSteps.push_back(currentStepBuffer.front());
-    currentStepBuffer.clear();
-    currentStepBuffer.push_back(stepsBuffer[0]);
-    stepsBuffer.erase(stepsBuffer.begin());
     
-    // Trajectories for third step.
-    computeMotion();
-     
-    oldSteps.push_back(currentStepBuffer.front());
-    currentStepBuffer.clear();
-    currentStepBuffer.push_back(stepsBuffer[0]);
-    stepsBuffer.erase(stepsBuffer.begin());
+    generateGenericStepTrajectories(currentStepBuffer.front(), stepsBuffer[0], stepsBuffer[1]);
     
-    oldSteps.push_back(currentStepBuffer.front());
+    optimizePendulumParameters(stepsBuffer[0], stepsBuffer[1]);
+    
+    generateGenericStepTrajectories(stepsBuffer[0], stepsBuffer[1], stepsBuffer[2]);
+    
+    optimizePendulumParameters(stepsBuffer[1], stepsBuffer[2]);
+    
+    generateGenericStepTrajectories(stepsBuffer[1], stepsBuffer[2], stepsBuffer[3]);
+    
+    optimizePendulumParameters(stepsBuffer[2], stepsBuffer[3]);
+    
+    generateGenericStepTrajectories(stepsBuffer[2], stepsBuffer[3], stepsBuffer[4]);
+    
+    optimizePendulumParameters(stepsBuffer[4], stepsBuffer[5]);
+    
+    generateGenericStepTrajectories(stepsBuffer[4], stepsBuffer[5], stepsBuffer[6]);
+    
+    optimizePendulumParameters(stepsBuffer[5], stepsBuffer[6]);
+    
+    generateGenericStepTrajectories(stepsBuffer[5], stepsBuffer[6], stepsBuffer[7]);
     
     // Extract trajectory points.
     comPosVect.clear();
     swingPosVect.clear();
     
-    for (int i = 0; i < oldSteps[0].getNumTrajectories(); i++)
+    for (int i = 0; i < currentStepBuffer[0].getNumTrajectories(); i++)
     {
-    Trajectory tempTraj(oldSteps[0].getTrajectory(i));
-    
-    comPosVect.push_back(tempTraj.getCOMTransform());
-    swingPosVect.push_back(tempTraj.getSwingFootTransform());
-    }
-    
-    for (int i = 0; i < oldSteps[1].getNumTrajectories(); i++)
-    {
-    Trajectory tempTraj(oldSteps[1].getTrajectory(i));
-    
-    comPosVect.push_back(tempTraj.getCOMTransform());
-    swingPosVect.push_back(tempTraj.getSwingFootTransform());
-    }
-     
-    for (int i = 0; i < oldSteps[2].getNumTrajectories(); i++)
-    {
-        Trajectory tempTraj(oldSteps[2].getTrajectory(i));
-    
-        comPosVect.push_back(tempTraj.getCOMTransform());
-        swingPosVect.push_back(tempTraj.getSwingFootTransform());
-    }
-     
-    for (int i = 0; i < oldSteps[3].getNumTrajectories(); i++)
-    {
-        Trajectory tempTraj(oldSteps[3].getTrajectory(i));
-     
-        comPosVect.push_back(tempTraj.getCOMTransform());
-        swingPosVect.push_back(tempTraj.getSwingFootTransform());
-    }
-    
-    for (int i = 0; i < oldSteps[4].getNumTrajectories(); i++)
-    {
-        Trajectory tempTraj(oldSteps[4].getTrajectory(i));
+        Trajectory tempTraj(currentStepBuffer[0].getTrajectory(i));
         
         comPosVect.push_back(tempTraj.getCOMTransform());
         swingPosVect.push_back(tempTraj.getSwingFootTransform());
     }
     
-    output.append("computeMotion Test (No rotation)_");
+    for (int i = 0; i < stepsBuffer[0].getNumTrajectories(); i++)
+    {
+        Trajectory tempTraj(stepsBuffer[0].getTrajectory(i));
+        
+        comPosVect.push_back(tempTraj.getCOMTransform());
+        swingPosVect.push_back(tempTraj.getSwingFootTransform());
+    }
+    
+    for (int i = 0; i < stepsBuffer[1].getNumTrajectories(); i++)
+    {
+        Trajectory tempTraj(stepsBuffer[1].getTrajectory(i));
+        
+        comPosVect.push_back(tempTraj.getCOMTransform());
+        swingPosVect.push_back(tempTraj.getSwingFootTransform());
+    }
+    
+    for (int i = 0; i < stepsBuffer[2].getNumTrajectories(); i++)
+    {
+        Trajectory tempTraj(stepsBuffer[2].getTrajectory(i));
+        
+        comPosVect.push_back(tempTraj.getCOMTransform());
+        swingPosVect.push_back(tempTraj.getSwingFootTransform());
+    }
+    
+    for (int i = 0; i < stepsBuffer[3].getNumTrajectories(); i++)
+    {
+        Trajectory tempTraj(stepsBuffer[3].getTrajectory(i));
+        
+        comPosVect.push_back(tempTraj.getCOMTransform());
+        swingPosVect.push_back(tempTraj.getSwingFootTransform());
+    }
+    
+    for (int i = 0; i < stepsBuffer[4].getNumTrajectories(); i++)
+    {
+        Trajectory tempTraj(stepsBuffer[4].getTrajectory(i));
+        
+        comPosVect.push_back(tempTraj.getCOMTransform());
+        swingPosVect.push_back(tempTraj.getSwingFootTransform());
+    }
+    
+    for (int i = 0; i < stepsBuffer[5].getNumTrajectories(); i++)
+    {
+        Trajectory tempTraj(stepsBuffer[5].getTrajectory(i));
+        
+        comPosVect.push_back(tempTraj.getCOMTransform());
+        swingPosVect.push_back(tempTraj.getSwingFootTransform());
+    }
+    
+    output.append("Six successive steps (5 deg rotation / step and no translation)_");
     output.append(boost::lexical_cast<std::string>(2 * comPosVect.size()));
     output.append("_");
+    
+    
+    
+    
+    thetaRFirst         = position6D(firstStepPos)[5];
+    thetaRSecond        = position6D(secondStepPos)[5];
+    double thetaRThird  = position6D(thirdStepPos)[5];
+    double thetaRFourth = position6D(fourthStepPos)[5];
+    double thetaRFifth  = position6D(fifthStepPos)[5];
+    double thetaRSixth  = position6D(sixthStepPos)[5];
     
     for (int i = 0; i < comPosVect.size(); i++)
     {
         std::vector<double> pos(position6D(comPosVect[i]));
-     
-        if (i < oldSteps[0].getNumTrajectories())
+        
+        if (i < currentStepBuffer[0].getNumTrajectories())
         {
             output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
             output.append("_");
             output.append(boost::lexical_cast<std::string>(pos[1]));
             output.append("_");
         }
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories()))
+        else if (i < (currentStepBuffer[0].getNumTrajectories() + stepsBuffer[0].getNumTrajectories()))
         {
-            output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
+            // x and y points will need to be rotated to global frame, and then translated to global position.
+            double xFirstStepFrame = pos[0];
+            double yFirstStepFrame = pos[1];
+            
+            double xGlobalFrame = xFirstStepFrame * cos(-1 * thetaRFirst) - yFirstStepFrame * sin(-1 * thetaRFirst) + GLOBAL_STEP_WIDTH / 2;
+            double yGlobalFrame = xFirstStepFrame * sin(-1 * thetaRFirst) + yFirstStepFrame * cos(-1 * thetaRFirst) + GLOBAL_STEP_LENGTH / 2;
+            
+            output.append(boost::lexical_cast<std::string>(xGlobalFrame));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH / 2));
+            output.append(boost::lexical_cast<std::string>(yGlobalFrame));
             output.append("_");
         }
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories()))
+        else if (i < (currentStepBuffer[0].getNumTrajectories() + stepsBuffer[0].getNumTrajectories() + stepsBuffer[1].getNumTrajectories()))
         {
-            output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
+            // Process for converting x and y points to global frame.
+            // Rotate and then translate to move into coordinate frame of first step.
+            // Rotate and then translate to move into coordinate frame of global frame.
+            double xSecondStepFrame = pos[0];
+            double ySecondStepFrame = pos[1];
+            
+            double xFirstStepFrame = xSecondStepFrame * cos(-1 * thetaRSecond) - ySecondStepFrame * sin(-1 * thetaRSecond) - GLOBAL_STEP_WIDTH;
+            double yFirstStepFrame = xSecondStepFrame * sin(-1 * thetaRSecond) + ySecondStepFrame * cos(-1 * thetaRSecond) + GLOBAL_STEP_LENGTH / 2;
+            
+            double xGlobalFrame = xFirstStepFrame * cos(-1 * thetaRFirst) - yFirstStepFrame * sin(-1 * thetaRFirst) + GLOBAL_STEP_WIDTH / 2;
+            double yGlobalFrame = xFirstStepFrame * sin(-1 * thetaRFirst) + yFirstStepFrame * cos(-1 * thetaRFirst) + GLOBAL_STEP_LENGTH / 2;
+            
+            output.append(boost::lexical_cast<std::string>(xGlobalFrame));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH ));
+            output.append(boost::lexical_cast<std::string>(yGlobalFrame));
             output.append("_");
         }
         else
         {
-            output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
+            // Process for converting x and y points to global frame.
+            // Rotate and then translate to move into coordinate frame of second step.
+            // Rotate and then translate to move into coordinate frame of first step.
+            // Rotate and then translate to move into coordinate frame of global frame.
+            double xThirdStepFrame = pos[0];
+            double yThirdStepFrame = pos[1];
+            
+            double xSecondStepFrame = xThirdStepFrame * cos(-1 * thetaRThird) - yThirdStepFrame * sin(-1 * thetaRThird) + GLOBAL_STEP_WIDTH;
+            double ySecondStepFrame = xThirdStepFrame * sin(-1 * thetaRThird) + yThirdStepFrame * cos(-1 * thetaRThird) + GLOBAL_STEP_LENGTH / 2;
+            
+            double xFirstStepFrame = xSecondStepFrame * cos(-1 * thetaRSecond) - ySecondStepFrame * sin(-1 * thetaRSecond) - GLOBAL_STEP_WIDTH;
+            double yFirstStepFrame = xSecondStepFrame * sin(-1 * thetaRSecond) + ySecondStepFrame * cos(-1 * thetaRSecond) + GLOBAL_STEP_LENGTH / 2;
+            
+            double xGlobalFrame = xFirstStepFrame * cos(-1 * thetaRFirst) - yFirstStepFrame * sin(-1 * thetaRFirst) + GLOBAL_STEP_WIDTH / 2;
+            double yGlobalFrame = xFirstStepFrame * sin(-1 * thetaRFirst) + yFirstStepFrame * cos(-1 * thetaRFirst) + GLOBAL_STEP_LENGTH / 2;
+            
+            output.append(boost::lexical_cast<std::string>(xGlobalFrame));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (1.5) * GLOBAL_STEP_LENGTH ));
+            output.append(boost::lexical_cast<std::string>(yGlobalFrame));
             output.append("_");
         }
-     
+        
         output.append(boost::lexical_cast<std::string>(pos[2]));
         output.append("_");
     }
-     
+    
     for (int i = 0; i < swingPosVect.size(); i++)
     {
         std::vector<double> pos(position6D(swingPosVect[i]));
-     
-        if (i < oldSteps[0].getNumTrajectories())
+        
+        if (i < currentStepBuffer[0].getNumTrajectories())
         {
             output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
             output.append("_");
             output.append(boost::lexical_cast<std::string>(pos[1]));
             output.append("_");
         }
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories()))
+        else if (i < (currentStepBuffer[0].getNumTrajectories() + stepsBuffer[0].getNumTrajectories()))
         {
-            output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
+            // x and y points will need to be rotated to global frame, and then translated to global position.
+            double xFirstStepFrame = pos[0];
+            double yFirstStepFrame = pos[1];
+            
+            double xGlobalFrame = xFirstStepFrame * cos(-1 * thetaRFirst) - yFirstStepFrame * sin(-1 * thetaRFirst) + GLOBAL_STEP_WIDTH / 2;
+            double yGlobalFrame = xFirstStepFrame * sin(-1 * thetaRFirst) + yFirstStepFrame * cos(-1 * thetaRFirst) + GLOBAL_STEP_LENGTH / 2;
+            
+            output.append(boost::lexical_cast<std::string>(xGlobalFrame));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH / 2));
+            output.append(boost::lexical_cast<std::string>(yGlobalFrame));
             output.append("_");
         }
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories()))
+        else if (i < (currentStepBuffer[0].getNumTrajectories() + stepsBuffer[0].getNumTrajectories() + stepsBuffer[1].getNumTrajectories()))
         {
-            output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
+            // Process for converting x and y points to global frame.
+            // Rotate and then translate to move into coordinate frame of first step.
+            // Rotate and then translate to move into coordinate frame of global frame.
+            double xSecondStepFrame = pos[0];
+            double ySecondStepFrame = pos[1];
+            
+            double xFirstStepFrame = xSecondStepFrame * cos(-1 * thetaRSecond) - ySecondStepFrame * sin(-1 * thetaRSecond) - GLOBAL_STEP_WIDTH;
+            double yFirstStepFrame = xSecondStepFrame * sin(-1 * thetaRSecond) + ySecondStepFrame * cos(-1 * thetaRSecond) + GLOBAL_STEP_LENGTH / 2;
+            
+            double xGlobalFrame = xFirstStepFrame * cos(-1 * thetaRFirst) - yFirstStepFrame * sin(-1 * thetaRFirst) + GLOBAL_STEP_WIDTH / 2;
+            double yGlobalFrame = xFirstStepFrame * sin(-1 * thetaRFirst) + yFirstStepFrame * cos(-1 * thetaRFirst) + GLOBAL_STEP_LENGTH / 2;
+            
+            output.append(boost::lexical_cast<std::string>(xGlobalFrame));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH));
+            output.append(boost::lexical_cast<std::string>(yGlobalFrame));
             output.append("_");
         }
         else
         {
-            output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
+            // Process for converting x and y points to global frame.
+            // Rotate and then translate to move into coordinate frame of second step.
+            // Rotate and then translate to move into coordinate frame of first step.
+            // Rotate and then translate to move into coordinate frame of global frame.
+            double xThirdStepFrame = pos[0];
+            double yThirdStepFrame = pos[1];
+            
+            double xSecondStepFrame = xThirdStepFrame * cos(-1 * thetaRThird) - yThirdStepFrame * sin(-1 * thetaRThird) + GLOBAL_STEP_WIDTH;
+            double ySecondStepFrame = xThirdStepFrame * sin(-1 * thetaRThird) + yThirdStepFrame * cos(-1 * thetaRThird) + GLOBAL_STEP_LENGTH / 2;
+            
+            double xFirstStepFrame = xSecondStepFrame * cos(-1 * thetaRSecond) - ySecondStepFrame * sin(-1 * thetaRSecond) - GLOBAL_STEP_WIDTH;
+            double yFirstStepFrame = xSecondStepFrame * sin(-1 * thetaRSecond) + ySecondStepFrame * cos(-1 * thetaRSecond) + GLOBAL_STEP_LENGTH / 2;
+            
+            double xGlobalFrame = xFirstStepFrame * cos(-1 * thetaRFirst) - yFirstStepFrame * sin(-1 * thetaRFirst) + GLOBAL_STEP_WIDTH / 2;
+            double yGlobalFrame = xFirstStepFrame * sin(-1 * thetaRFirst) + yFirstStepFrame * cos(-1 * thetaRFirst) + GLOBAL_STEP_LENGTH / 2;
+            
+            output.append(boost::lexical_cast<std::string>(xGlobalFrame));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (1.5) * GLOBAL_STEP_LENGTH));
+            output.append(boost::lexical_cast<std::string>(yGlobalFrame));
             output.append("_");
         }
-     
+        
         output.append(boost::lexical_cast<std::string>(pos[2]));
         output.append("_");
     }
+     */
     
-    /** computeMotion (test 7 steps) **/
+    // Post testing output manipulation.
+    std::string tempOutput(boost::lexical_cast<std::string>(numTests));
+    tempOutput.append("_");
+    tempOutput.append(output);
+    return tempOutput;
+}
+
+std::string StepHandler::runVisualTestsPartThree(void)
+{
+    int numTests = 0;
+    std::string output("");
+
+    /** computeMotion **/
     numTests++;
-    
+
     stepsBuffer.clear();
     currentStepBuffer.clear();
-    oldSteps.clear();
     
+    std::vector<Point> oldSteps;
+
     generateImplicitStep();
     
     // Create first real step.
-    firstStep = Point(Point::right, Point::begin);
-    
-    firstStepPos.clear();
+    Point firstStep = Point(Point::right, Point::begin);
+
+    Transform firstStepPos;
     firstStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     firstStep.setFootPos(firstStepPos);
-    
+
+    COMContainer firstStepParams;
     firstStepParams.setX0Pos(-1 * GLOBAL_X0POS);
     firstStepParams.setX0Vel(GLOBAL_X0VEL);
     firstStepParams.setY0Pos(GLOBAL_Y0POS);
@@ -6531,113 +6828,71 @@ std::string StepHandler::runVisualTestsPartTwo(void)
     firstStepParams.setR(0.0);
     
     firstStep.setTrajectoryParameters(firstStepParams);
-    
+
     computeStartTimeFirstStep(firstStep);
     stepsBuffer.push_back(firstStep);
     
     // Create second real step.
-    secondStep = Point(Point::left, Point::moving);
-    secondStepPos.clear();
+    Point secondStep = Point(Point::left, Point::moving);
+    Transform secondStepPos;
     secondStepPos.translate(-1 * GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     secondStep.setFootPos(secondStepPos);
     stepsBuffer.push_back(secondStep);
     
     // Create third real step.
-    thirdStep = Point(Point::right, Point::moving);
-    thirdStepPos.clear();
+    Point thirdStep = Point(Point::right, Point::moving);
+    Transform thirdStepPos;
     thirdStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     thirdStep.setFootPos(thirdStepPos);
     stepsBuffer.push_back(thirdStep);
     
     // Create fourth real step.
-    fourthStep = Point(Point::left, Point::moving);
-    fourthStepPos.clear();
+    Point fourthStep = Point(Point::left, Point::moving);
+    Transform fourthStepPos;
     fourthStepPos.translate(-1 * GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
     fourthStep.setFootPos(fourthStepPos);
     stepsBuffer.push_back(fourthStep);
     
-    // Create fifth real step.
-    Point fifthStep = Point(Point::right, Point::moving);
-    Transform fifthStepPos;
-    fifthStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
-    fifthStep.setFootPos(fifthStepPos);
-    stepsBuffer.push_back(fifthStep);
-
-    // Create sixth real step.
-    Point sixthStep = Point(Point::left, Point::moving);
-    Transform sixthStepPos;
-    sixthStepPos.translate(-1 * GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
-    sixthStep.setFootPos(sixthStepPos);
-    stepsBuffer.push_back(sixthStep);
-    
-    // Create seventh real step.
-    Point seventhStep = Point(Point::right, Point::moving);
-    Transform seventhStepPos;
-    seventhStepPos.translate(GLOBAL_STEP_WIDTH, GLOBAL_STEP_LENGTH / 2, 0);
-    seventhStep.setFootPos(seventhStepPos);
-    stepsBuffer.push_back(seventhStep);
-    
     // Trajectories for implicit and first step.
     generateImplicitStepTrajectories(currentStepBuffer.front());
-    computeMotion();
     
+    computeMotion();
+    updateSwingTrajectory();
+    
+    std::cout << "first step offset :"  << stepsBuffer[0].getTrajectoryParameters().getR() << std::endl;
+
     oldSteps.push_back(currentStepBuffer.front());
     currentStepBuffer.clear();
     currentStepBuffer.push_back(stepsBuffer[0]);
     stepsBuffer.erase(stepsBuffer.begin());
-    
+
     // Trajectories for second step.
     computeMotion();
-    
+    updateSwingTrajectory();
+
+    std::cout << "second step offset :"  << stepsBuffer[0].getTrajectoryParameters().getR() << std::endl;
+
     oldSteps.push_back(currentStepBuffer.front());
     currentStepBuffer.clear();
     currentStepBuffer.push_back(stepsBuffer[0]);
     stepsBuffer.erase(stepsBuffer.begin());
-    
+
     // Trajectories for third step.
     computeMotion();
-    
+    updateSwingTrajectory();
+
+    //std::cout << "test info : " << currentStepBuffer.front().getExtraTime() << std::endl;
+
     oldSteps.push_back(currentStepBuffer.front());
     currentStepBuffer.clear();
     currentStepBuffer.push_back(stepsBuffer[0]);
     stepsBuffer.erase(stepsBuffer.begin());
-    
     oldSteps.push_back(currentStepBuffer.front());
-    
-    // Trajectories for fourth step.
-    computeMotion();
-    
-    oldSteps.push_back(currentStepBuffer.front());
-    currentStepBuffer.clear();
-    currentStepBuffer.push_back(stepsBuffer[0]);
-    stepsBuffer.erase(stepsBuffer.begin());
-    
-    oldSteps.push_back(currentStepBuffer.front());
-    
-    // Trajectories for fifth step.
-    computeMotion();
-    
-    oldSteps.push_back(currentStepBuffer.front());
-    currentStepBuffer.clear();
-    currentStepBuffer.push_back(stepsBuffer[0]);
-    stepsBuffer.erase(stepsBuffer.begin());
-    
-    oldSteps.push_back(currentStepBuffer.front());
-    
-    // Trajectories for sixth step.
-    computeMotion();
-    
-    oldSteps.push_back(currentStepBuffer.front());
-    currentStepBuffer.clear();
-    currentStepBuffer.push_back(stepsBuffer[0]);
-    stepsBuffer.erase(stepsBuffer.begin());
-    
-    oldSteps.push_back(currentStepBuffer.front());
-    
+
     // Extract trajectory points.
-    comPosVect.clear();
-    swingPosVect.clear();
-    
+    std::vector <Transform> comPosVect;
+    std::vector <Transform> swingPosVect;
+
     for (int i = 0; i < oldSteps[0].getNumTrajectories(); i++)
     {
         Trajectory tempTraj(oldSteps[0].getTrajectory(i));
@@ -6661,7 +6916,7 @@ std::string StepHandler::runVisualTestsPartTwo(void)
         comPosVect.push_back(tempTraj.getCOMTransform());
         swingPosVect.push_back(tempTraj.getSwingFootTransform());
     }
-    
+
     for (int i = 0; i < oldSteps[3].getNumTrajectories(); i++)
     {
         Trajectory tempTraj(oldSteps[3].getTrajectory(i));
@@ -6669,25 +6924,11 @@ std::string StepHandler::runVisualTestsPartTwo(void)
         comPosVect.push_back(tempTraj.getCOMTransform());
         swingPosVect.push_back(tempTraj.getSwingFootTransform());
     }
-    for (int i = 0; i < oldSteps[4].getNumTrajectories(); i++)
-    {
-        Trajectory tempTraj(oldSteps[4].getTrajectory(i));
-        
-        comPosVect.push_back(tempTraj.getCOMTransform());
-        swingPosVect.push_back(tempTraj.getSwingFootTransform());
-    }
-    for (int i = 0; i < oldSteps[5].getNumTrajectories(); i++)
-    {
-        Trajectory tempTraj(oldSteps[5].getTrajectory(i));
-        
-        comPosVect.push_back(tempTraj.getCOMTransform());
-        swingPosVect.push_back(tempTraj.getSwingFootTransform());
-    }
-    
+
     output.append("computeMotion Test (No rotation)_");
     output.append(boost::lexical_cast<std::string>(2 * comPosVect.size()));
     output.append("_");
-    
+
     for (int i = 0; i < comPosVect.size(); i++)
     {
         std::vector<double> pos(position6D(comPosVect[i]));
@@ -6703,46 +6944,31 @@ std::string StepHandler::runVisualTestsPartTwo(void)
         {
             output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH / 2));
+            output.append(boost::lexical_cast<std::string>(pos[1] + position6D(oldSteps[1].getFootPos())[1]));
             output.append("_");
         }
         else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories()))
         {
             output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH ));
-            output.append("_");
-        }
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories() +
-                      oldSteps[3].getNumTrajectories()))
-        {
-            output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
-            output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (1.5) * GLOBAL_STEP_LENGTH ));
-            output.append("_");
-        }
-        
-        
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories() +
-                      oldSteps[3].getNumTrajectories() + oldSteps[4].getNumTrajectories()))
-        {
-            output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
-            output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (2) * GLOBAL_STEP_LENGTH ));
+            output.append(boost::lexical_cast<std::string>(pos[1] + position6D(oldSteps[1].getFootPos())[1]
+                                                                  + position6D(oldSteps[2].getFootPos())[1]));
             output.append("_");
         }
         else
         {
             output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (2.5) * GLOBAL_STEP_LENGTH ));
+            output.append(boost::lexical_cast<std::string>(pos[1] + position6D(oldSteps[1].getFootPos())[1]
+                                                                  + position6D(oldSteps[2].getFootPos())[1]
+                                                                  + position6D(oldSteps[3].getFootPos())[1]));
             output.append("_");
         }
         
         output.append(boost::lexical_cast<std::string>(pos[2]));
         output.append("_");
     }
-    
+
     for (int i = 0; i < swingPosVect.size(); i++)
     {
         std::vector<double> pos(position6D(swingPosVect[i]));
@@ -6758,46 +6984,31 @@ std::string StepHandler::runVisualTestsPartTwo(void)
         {
             output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH / 2));
+            output.append(boost::lexical_cast<std::string>(pos[1] + position6D(oldSteps[1].getFootPos())[1]));
             output.append("_");
         }
         else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories()))
         {
             output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + GLOBAL_STEP_LENGTH));
-            output.append("_");
-        }
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories() +
-                      oldSteps[3].getNumTrajectories()))
-        {
-            output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
-            output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (1.5) * GLOBAL_STEP_LENGTH));
-            output.append("_");
-        }
-        
-        
-        else if (i < (oldSteps[0].getNumTrajectories() + oldSteps[1].getNumTrajectories() + oldSteps[2].getNumTrajectories() +
-                      oldSteps[3].getNumTrajectories() + oldSteps[4].getNumTrajectories()))
-        {
-            output.append(boost::lexical_cast<std::string>(pos[0] - GLOBAL_STEP_WIDTH / 2));
-            output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (2) * GLOBAL_STEP_LENGTH));
+            output.append(boost::lexical_cast<std::string>(pos[1] + position6D(oldSteps[1].getFootPos())[1]
+                                                                  + position6D(oldSteps[2].getFootPos())[1]));
             output.append("_");
         }
         else
         {
             output.append(boost::lexical_cast<std::string>(pos[0] + GLOBAL_STEP_WIDTH / 2));
             output.append("_");
-            output.append(boost::lexical_cast<std::string>(pos[1] + (2.5) * GLOBAL_STEP_LENGTH));
+            output.append(boost::lexical_cast<std::string>(pos[1] + position6D(oldSteps[1].getFootPos())[1]
+                                                                  + position6D(oldSteps[2].getFootPos())[1]
+                                                                  + position6D(oldSteps[3].getFootPos())[1]));
             output.append("_");
         }
         
         output.append(boost::lexical_cast<std::string>(pos[2]));
         output.append("_");
     }
-    
+
     // Post testing output manipulation.
     std::string tempOutput(boost::lexical_cast<std::string>(numTests));
     tempOutput.append("_");

@@ -26,6 +26,8 @@ class Point
         Transform getFootPos(void);
         void addTrajectory(Trajectory argTrajectory);
         Trajectory getTrajectory(int index);
+        Trajectory getTrajectoryFromEnd(int indexFromEnd);
+        void replaceTrajectoryFromEnd(int indexFromEnd, Trajectory newTrajectory);
         int getNumTrajectories();
         Point::Foot getFoot(void);
         Point::StepType getStepType(void);
@@ -33,6 +35,8 @@ class Point
         COMContainer getTrajectoryParameters();
         void setExtraTime(double argTime);
         double getExtraTime(void);
+        void setShouldUpdateSwingTrajectory(bool argUpdate);
+        bool getShouldUpdateSwingTrajectory(void);
     
     private:
         // Fields
@@ -42,6 +46,7 @@ class Point
         StepType stepType;
         COMContainer trajParameters;
         double extraTime;
+        bool shouldUpdateSwingTrajectory;
 };
 
 #endif

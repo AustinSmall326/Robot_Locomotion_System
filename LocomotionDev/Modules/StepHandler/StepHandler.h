@@ -112,7 +112,8 @@ class StepHandler : public AL::ALModule
         void generateImplicitStepTrajectories(Point& implicitStep);
         void generateGenericStepTrajectories(Point& currentStep, Point& nextStep, Point& nextNextStep);
         void optimizePendulumParameters(Point& currentStep, Point& nextStep);
-
+        void updateSwingTrajectory(void);
+    
         // Low level functional / helper methods.
         void computeTransitionTime(Point& firstStep, Point& secondStep);
         void computeStartTimeFirstStep(Point& firstStep);
@@ -129,6 +130,7 @@ class StepHandler : public AL::ALModule
         std::string runTests(void);
         std::string runVisualTestsPartOne(void);
         std::string runVisualTestsPartTwo(void);
+        std::string runVisualTestsPartThree(void);
         std::string getParamValue(std::string paramName);
         std::string setParamValue(std::string paramName, std::string paramValue);
         void startTestMotion(void);
